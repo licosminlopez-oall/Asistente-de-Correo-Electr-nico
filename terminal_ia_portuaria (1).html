@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terminal IA - Comunicaciones</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Mammoth.js para leer archivos .docx -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+    <style>
+        .hidden { display: none !important; }
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-slate-200 text-slate-800 font-sans">
+
+    <!-- ENCABEZADO -->
+    <header class="bg-[#0A192F] border-b border-slate-800 sticky top-0 z-10 shadow-md">
+        <div class="max-w-3xl mx-auto px-4 py-4 flex items-center justify-between">
+            <div class="flex items-center gap-3 text-orange-500">
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="3"/><line x1="12" y1="22" x2="12" y2="8"/><path d="M5 12H2a10 10 0 0 0 20 0h-3"/></svg>
+                <h1 class="text-xl font-bold text-white uppercase tracking-wide">Terminal <span class="text-orange-500">IA</span></h1>
+            </div>
+            <button id="btn-new-op" class="hidden text-sm font-medium text-slate-300 hover:text-orange-400 flex items-center gap-1 transition-colors uppercase tracking-wider">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>
+                Nueva Operación
+            </button>
+        </div>
+    </header>
+
+    <main class="max-w-3xl mx-auto px-4 py-8">
+        
+        <!-- PASO 1: SELECCIÓN DE MODO Y GUÍA GLOBAL -->
+        <div id="step1" class="space-y-6 fade-in">
+            <div class="text-center mb-8">
+                <h2 class="text-3xl font-bold text-[#0A192F] mb-3 uppercase tracking-tight">Gestión de Comunicaciones</h2>
+                <p class="text-slate-600 text-lg">Seleccione el tipo de mensaje a procesar en la terminal.</p>
+            </div>
+
+            <!-- Guía Institucional Global -->
+            <div class="bg-white p-6 rounded-sm shadow-md border-l-4 border-orange-500 mb-6">
+                <h3 class="text-lg font-bold text-[#0A192F] mb-2 flex items-center gap-2 uppercase tracking-wide">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-orange-500"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                    Directriz Institucional de Redacción (Opcional)
+                </h3>
+                <p class="text-sm text-slate-500 mb-4">Cargue un documento con las reglas corporativas, saludos oficiales o firmas. La Inteligencia Artificial aplicará este formato a todos sus comunicados.</p>
+                <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                    <label for="guide-upload" class="cursor-pointer flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-200 hover:bg-slate-300 text-[#0A192F] font-bold rounded-sm border border-slate-400 transition-colors uppercase tracking-wide text-xs shadow-sm">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                        Cargar Documento (.txt, .docx)
+                    </label>
+                    <input type="file" id="guide-upload" class="hidden" accept=".txt,.md,.csv,.docx">
+                    <div class="flex items-center gap-2 w-full sm:w-auto">
+                        <span id="guide-file-name" class="text-sm font-mono text-slate-500 truncate max-w-[200px] sm:max-w-xs">Ningún archivo cargado</span>
+                        <button id="btn-remove-guide" class="hidden text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 p-1.5 rounded-sm transition-colors" title="Remover directriz">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-6">
+                <!-- Botón Nuevo -->
+                <button id="btn-mode-new" class="group flex flex-col items-center p-8 bg-white rounded-sm border-t-4 border-transparent shadow-sm hover:border-orange-500 hover:shadow-lg transition-all duration-200">
+                    <div class="w-16 h-16 bg-[#0A192F] text-white rounded-sm flex items-center justify-center mb-4 group-hover:bg-orange-500 transition-colors shadow-inner">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><line x1="9" y1="10" x2="15" y2="10"/><line x1="12" y1="7" x2="12" y2="13"/></svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-[#0A192F] mb-2 uppercase text-center tracking-wide">Emitir Comunicado</h3>
+                    <p class="text-slate-500 text-center text-sm">Redacte un nuevo correo operativo o administrativo con asistencia de la IA.</p>
+                </button>
+
+                <!-- Botón Responder -->
+                <button id="btn-mode-reply" class="group flex flex-col items-center p-8 bg-white rounded-sm border-t-4 border-transparent shadow-sm hover:border-[#0A192F] hover:shadow-lg transition-all duration-200">
+                    <div class="w-16 h-16 bg-slate-200 text-[#0A192F] rounded-sm flex items-center justify-center mb-4 group-hover:bg-[#0A192F] group-hover:text-white transition-colors shadow-inner">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-[#0A192F] mb-2 uppercase text-center tracking-wide">Responder Mensaje</h3>
+                    <p class="text-slate-500 text-center text-sm">Procese un correo entrante para generar una respuesta estandarizada.</p>
+                </button>
+            </div>
+        </div>
+
+        <!-- PASO 2: ENTRADA DE TEXTO Y CONFIGURACIÓN -->
+        <div id="step2" class="hidden bg-white rounded-sm shadow-md border border-slate-300 overflow-hidden fade-in">
+            <div id="step2-color-bar" class="h-3 bg-orange-500"></div>
+            <div class="p-6 sm:p-8 space-y-8">
+                
+                <!-- Encabezado dinámico de Paso 2 -->
+                <div>
+                    <h2 class="text-2xl font-bold text-[#0A192F] mb-2 flex items-center gap-2 uppercase tracking-tight">
+                        <span id="step2-icon-container"></span>
+                        <span id="step2-title">Parámetros del Comunicado</span>
+                    </h2>
+                    <p id="step2-desc" class="text-slate-500 text-sm mb-4">Especifique la instrucción operativa.</p>
+                    <textarea id="input-context" placeholder="Escriba aquí..." class="w-full h-40 p-4 border-2 border-slate-200 rounded-sm focus:ring-0 focus:border-[#0A192F] outline-none resize-none text-slate-800 bg-slate-50 font-mono text-sm shadow-inner"></textarea>
+                </div>
+
+                <!-- Tonos -->
+                <div>
+                    <h3 class="text-lg font-bold text-[#0A192F] mb-3 flex items-center gap-2 uppercase tracking-wide">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-500"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
+                        Directrices de Tono (Multiselección)
+                    </h3>
+                    <div id="tones-container" class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                        <!-- Los botones de tonos se generan desde JS -->
+                    </div>
+                </div>
+
+                <!-- Mensaje de Error -->
+                <div id="error-container" class="hidden bg-red-50 border-l-4 border-red-500 p-3">
+                    <p id="error-text" class="text-red-700 text-sm font-semibold"></p>
+                </div>
+
+                <!-- Botonera -->
+                <div class="pt-4 border-t-2 border-slate-200 flex flex-col-reverse sm:flex-row gap-4 sm:gap-0 justify-between items-center bg-slate-100 -mx-6 sm:-mx-8 -mb-6 sm:-mb-8 p-6 sm:p-8">
+                    <div class="flex gap-3 w-full sm:w-auto justify-between sm:justify-start">
+                        <button id="btn-cancel" class="flex items-center justify-center gap-2 px-4 py-2.5 rounded-sm font-bold text-slate-700 hover:bg-slate-300 border border-slate-400 transition-colors uppercase tracking-wide text-sm bg-white shadow-sm flex-1 sm:flex-none">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+                            Cancelar
+                        </button>
+                        <button id="btn-clear" class="flex items-center justify-center gap-2 px-4 py-2.5 rounded-sm font-bold transition-colors uppercase tracking-wide text-sm bg-white shadow-sm border flex-1 sm:flex-none text-slate-400 border-slate-200 cursor-not-allowed" disabled>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                            Limpiar
+                        </button>
+                    </div>
+
+                    <button id="btn-generate" class="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 rounded-sm font-bold text-white uppercase tracking-wide transition-all shadow-md bg-orange-500 hover:bg-orange-600 border-b-4 border-orange-700 active:border-b-0 active:mt-1 opacity-50 cursor-not-allowed border-none" disabled>
+                        <span id="btn-generate-content" class="flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 21c.6.5 1.2 1 2.5 1 2.5 0 3.2-1.2 5.5-1.2 2.3 0 3 1.2 5.5 1.2 1.3 0 1.9-.5 2.5-1"/><path d="M19.38 20A11.6 11.6 0 0 0 21 14l-9-4-9 4c0 2.9.94 5.34 2.81 7.76"/><path d="M19 13V7a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v6"/><path d="M12 10v4"/><path d="M12 2v3"/></svg>
+                            Generar Redacción
+                        </span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- PASO 3: RESULTADO -->
+        <div id="step3" class="hidden bg-white rounded-sm shadow-md border border-slate-300 overflow-hidden fade-in">
+            <div class="bg-[#0A192F] px-6 py-4 border-b border-slate-800 flex justify-between items-center">
+                <h3 class="font-bold text-white flex items-center gap-2 uppercase tracking-wide">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-orange-500"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                    Comunicado Listo
+                </h3>
+                <span id="result-tones-badge" class="text-xs font-bold px-3 py-1 bg-white/10 border border-white/20 rounded-sm text-white uppercase tracking-wider">
+                    Tono
+                </span>
+            </div>
+            
+            <div class="p-6 sm:p-8">
+                <div class="bg-slate-50 border-2 border-slate-200 rounded-sm p-6 mb-8 relative shadow-inner">
+                    <div class="absolute top-0 left-0 w-1.5 h-full bg-orange-500"></div>
+                    <p id="generated-text-content" class="whitespace-pre-wrap text-slate-800 leading-relaxed font-serif text-lg"></p>
+                </div>
+
+                <div class="flex flex-col sm:flex-row gap-4 justify-end pt-2 border-t border-slate-100">
+                    <button id="btn-adjust" class="px-6 py-2.5 rounded-sm font-bold text-[#0A192F] border-2 border-[#0A192F] hover:bg-[#0A192F] hover:text-white transition-colors uppercase tracking-wide text-sm">
+                        Ajustar Parámetros
+                    </button>
+                    <button id="btn-copy" class="flex items-center justify-center gap-2 px-6 py-2.5 rounded-sm font-bold text-white uppercase tracking-wide text-sm transition-all shadow-md bg-orange-500 hover:bg-orange-600 border-b-4 border-orange-700 active:border-b-0 active:mt-1">
+                        <span id="btn-copy-content" class="flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                            Copiar Comunicado
+                        </span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- LÓGICA DE LA APLICACIÓN -->
+    <script>
+        // ESTADO DE LA APLICACIÓN
+        let state = {
+            mode: null, 
+            contextText: '',
+            selectedTones: ['formal'],
+            generatedText: '',
+            isGenerating: false,
+            error: '',
+            guideText: '',
+            guideFileName: '',
+            errorGuide: ''
+        };
+
+        const tones = [
+            { id: 'formal', label: 'Formal y Profesional', emoji: '👔' },
+            { id: 'amable', label: 'Amable y Cercano', emoji: '😊' },
+            { id: 'persuasivo', label: 'Persuasivo / Ventas', emoji: '🎯' },
+            { id: 'directo', label: 'Directo y Conciso', emoji: '⚡' },
+            { id: 'disculpa', label: 'Disculpa / Conciliador', emoji: '🤝' },
+        ];
+
+        // ICONOS SVG (Textos)
+        const icons = {
+            new: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-orange-500"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><line x1="9" y1="10" x2="15" y2="10"/><line x1="12" y1="7" x2="12" y2="13"/></svg>`,
+            reply: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-[#0A192F]"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg>`,
+            ship: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 21c.6.5 1.2 1 2.5 1 2.5 0 3.2-1.2 5.5-1.2 2.3 0 3 1.2 5.5 1.2 1.3 0 1.9-.5 2.5-1"/><path d="M19.38 20A11.6 11.6 0 0 0 21 14l-9-4-9 4c0 2.9.94 5.34 2.81 7.76"/><path d="M19 13V7a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v6"/><path d="M12 10v4"/><path d="M12 2v3"/></svg>`,
+            spinner: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="animate-spin"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>`,
+            copy: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`,
+            check: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`
+        };
+
+        // REFERENCIAS DEL DOM
+        const el = {
+            step1: document.getElementById('step1'),
+            step2: document.getElementById('step2'),
+            step3: document.getElementById('step3'),
+            btnNewOp: document.getElementById('btn-new-op'),
+            
+            btnModeNew: document.getElementById('btn-mode-new'),
+            btnModeReply: document.getElementById('btn-mode-reply'),
+            
+            step2Title: document.getElementById('step2-title'),
+            step2Desc: document.getElementById('step2-desc'),
+            step2ColorBar: document.getElementById('step2-color-bar'),
+            step2IconContainer: document.getElementById('step2-icon-container'),
+            inputContext: document.getElementById('input-context'),
+            tonesContainer: document.getElementById('tones-container'),
+            errorContainer: document.getElementById('error-container'),
+            errorText: document.getElementById('error-text'),
+            btnCancel: document.getElementById('btn-cancel'),
+            btnClear: document.getElementById('btn-clear'),
+            btnGenerate: document.getElementById('btn-generate'),
+            btnGenerateContent: document.getElementById('btn-generate-content'),
+            
+            guideUpload: document.getElementById('guide-upload'),
+            guideFileName: document.getElementById('guide-file-name'),
+            btnRemoveGuide: document.getElementById('btn-remove-guide'),
+            
+            resultTonesBadge: document.getElementById('result-tones-badge'),
+            generatedTextContent: document.getElementById('generated-text-content'),
+            btnAdjust: document.getElementById('btn-adjust'),
+            btnCopy: document.getElementById('btn-copy'),
+            btnCopyContent: document.getElementById('btn-copy-content')
+        };
+
+        // FUNCIONES DE RENDERIZADO
+        function updateUI() {
+            if (state.mode === null) {
+                el.step1.classList.remove('hidden');
+                el.step2.classList.add('hidden');
+                el.step3.classList.add('hidden');
+                el.btnNewOp.classList.add('hidden');
+            } else if (state.mode !== null && !state.generatedText) {
+                el.step1.classList.add('hidden');
+                el.step2.classList.remove('hidden');
+                el.step3.classList.add('hidden');
+                el.btnNewOp.classList.remove('hidden');
+                
+                if (state.mode === 'new') {
+                    el.step2Title.textContent = 'Parámetros del Comunicado';
+                    el.step2Desc.textContent = 'Especifique la instrucción operativa. Ej: "Notificar retraso en atraque del buque".';
+                    el.inputContext.placeholder = "Escriba las instrucciones de la operación aquí...";
+                    el.step2ColorBar.className = 'h-3 bg-orange-500';
+                    el.step2IconContainer.innerHTML = icons.new;
+                } else {
+                    el.step2Title.textContent = 'Mensaje Recibido';
+                    el.step2Desc.textContent = 'Ingrese el contenido del mensaje original para procesar la respuesta correspondiente.';
+                    el.inputContext.placeholder = "Pegue el correo recibido aquí...";
+                    el.step2ColorBar.className = 'h-3 bg-[#0A192F]';
+                    el.step2IconContainer.innerHTML = icons.reply;
+                }
+            } else if (state.generatedText) {
+                el.step1.classList.add('hidden');
+                el.step2.classList.add('hidden');
+                el.step3.classList.remove('hidden');
+                el.btnNewOp.classList.remove('hidden');
+                
+                el.generatedTextContent.textContent = state.generatedText;
+                const toneLabels = state.selectedTones.map(id => tones.find(t => t.id === id).label).join(' + ');
+                el.resultTonesBadge.textContent = toneLabels;
+            }
+
+            renderTones();
+            updateButtonsState();
+            updateErrorState();
+            
+            // Actualizar UI de la Guía Institucional (Ahora en Step 1)
+            if (state.guideFileName) {
+                el.guideFileName.textContent = state.guideFileName;
+                el.guideFileName.className = 'text-sm font-mono text-[#0A192F] font-bold truncate max-w-[200px] sm:max-w-xs block';
+                el.btnRemoveGuide.classList.remove('hidden');
+            } else if (state.errorGuide) {
+                el.guideFileName.textContent = state.errorGuide;
+                el.guideFileName.className = 'text-sm font-mono text-red-500 font-bold block';
+                el.btnRemoveGuide.classList.add('hidden');
+            } else {
+                el.guideFileName.textContent = 'Ningún archivo cargado';
+                el.guideFileName.className = 'text-sm font-mono text-slate-500 block';
+                el.btnRemoveGuide.classList.add('hidden');
+            }
+        }
+
+        function renderTones() {
+            el.tonesContainer.innerHTML = '';
+            tones.forEach(t => {
+                const isSelected = state.selectedTones.includes(t.id);
+                const btnClass = isSelected 
+                    ? 'border-[#0A192F] bg-[#0A192F] text-white shadow-md' 
+                    : 'border-slate-200 bg-slate-50 text-slate-600 hover:border-slate-400';
+                
+                const btn = document.createElement('button');
+                btn.className = `flex flex-col items-center p-3 rounded-sm border-2 text-sm font-bold transition-all ${btnClass}`;
+                btn.innerHTML = `<span class="text-xl mb-1">${t.emoji}</span><span>${t.label}</span>`;
+                
+                btn.onclick = () => {
+                    if (isSelected && state.selectedTones.length > 1) {
+                        state.selectedTones = state.selectedTones.filter(id => id !== t.id);
+                    } else if (!isSelected) {
+                        state.selectedTones.push(t.id);
+                    }
+                    updateUI();
+                };
+                el.tonesContainer.appendChild(btn);
+            });
+        }
+
+        function updateButtonsState() {
+            if (!state.contextText) {
+                el.btnClear.className = 'flex items-center justify-center gap-2 px-4 py-2.5 rounded-sm font-bold transition-colors uppercase tracking-wide text-sm bg-white shadow-sm border flex-1 sm:flex-none text-slate-400 border-slate-200 cursor-not-allowed';
+                el.btnClear.disabled = true;
+            } else {
+                el.btnClear.className = 'flex items-center justify-center gap-2 px-4 py-2.5 rounded-sm font-bold transition-colors uppercase tracking-wide text-sm bg-white shadow-sm border flex-1 sm:flex-none text-red-600 hover:bg-red-50 border-red-200 hover:border-red-300';
+                el.btnClear.disabled = false;
+            }
+
+            const canGenerate = state.contextText.trim() && state.selectedTones.length > 0 && !state.isGenerating;
+            if (!canGenerate) {
+                let extraClasses = state.isGenerating ? 'bg-slate-400 cursor-not-allowed' : 'opacity-50 cursor-not-allowed border-none bg-orange-500';
+                el.btnGenerate.className = `w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 rounded-sm font-bold text-white uppercase tracking-wide transition-all shadow-md ${extraClasses}`;
+                el.btnGenerate.disabled = true;
+            } else {
+                el.btnGenerate.className = 'w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 rounded-sm font-bold text-white uppercase tracking-wide transition-all shadow-md bg-orange-500 hover:bg-orange-600 border-b-4 border-orange-700 active:border-b-0 active:mt-1';
+                el.btnGenerate.disabled = false;
+            }
+
+            if (state.isGenerating) {
+                el.btnGenerateContent.innerHTML = `${icons.spinner} Procesando...`;
+            } else {
+                el.btnGenerateContent.innerHTML = `${icons.ship} Generar Redacción`;
+            }
+        }
+
+        function updateErrorState() {
+            if (state.error) {
+                el.errorContainer.classList.remove('hidden');
+                el.errorText.textContent = state.error;
+            } else {
+                el.errorContainer.classList.add('hidden');
+            }
+        }
+
+        function resetApp() {
+            // Nota: Mantenemos la guía y los tonos guardados por comodidad al reiniciar
+            state.mode = null;
+            state.contextText = '';
+            state.generatedText = '';
+            state.isGenerating = false;
+            state.error = '';
+            el.inputContext.value = '';
+            updateUI();
+        }
+
+        // LÓGICA DE CARGA DE ARCHIVO (Guía Institucional)
+        el.guideUpload.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            // Feedback visual de carga
+            state.errorGuide = '';
+            el.guideFileName.textContent = "Procesando documento...";
+            el.guideFileName.className = 'text-sm font-mono text-orange-500 font-bold block';
+            
+            const fileName = file.name.toLowerCase();
+
+            try {
+                if (fileName.endsWith('.docx')) {
+                    // Usar mammoth.js para extraer texto de Word
+                    const arrayBuffer = await file.arrayBuffer();
+                    const result = await mammoth.extractRawText({ arrayBuffer: arrayBuffer });
+                    state.guideText = result.value;
+                    state.guideFileName = file.name;
+                    updateUI();
+                } else {
+                    // Texto plano (.txt, .md, .csv)
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        state.guideText = event.target.result;
+                        state.guideFileName = file.name;
+                        updateUI();
+                    };
+                    reader.readAsText(file);
+                }
+            } catch (err) {
+                console.error("Error al leer el archivo:", err);
+                state.guideText = '';
+                state.guideFileName = '';
+                state.errorGuide = 'Error al leer archivo. Intente con formato válido.';
+                el.guideUpload.value = '';
+                updateUI();
+            }
+        });
+
+        el.btnRemoveGuide.addEventListener('click', () => {
+            state.guideText = '';
+            state.guideFileName = '';
+            state.errorGuide = '';
+            el.guideUpload.value = ''; 
+            updateUI();
+        });
+
+        // LÓGICA DE IA (Gemini API)
+        const fetchWithRetry = async (url, options, retries = 5) => {
+            for (let i = 0; i < retries; i++) {
+                try {
+                    const response = await fetch(url, options);
+                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                    return await response.json();
+                } catch (err) {
+                    if (i === retries - 1) throw err;
+                    await new Promise(res => setTimeout(res, Math.pow(2, i) * 1000));
+                }
+            }
+        };
+
+        async function generateEmail() {
+            if (!state.contextText.trim() || state.selectedTones.length === 0) return;
+            
+            state.isGenerating = true;
+            state.error = '';
+            updateUI();
+            
+            const apiKey = ""; 
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+            
+            const toneNames = state.selectedTones.map(id => tones.find(t => t.id === id).label).join(', ');
+            
+            let prompt = '';
+            if (state.mode === 'reply') {
+               prompt = `Redacta una respuesta completa y profesional para el siguiente correo recibido.\n\nCorreo recibido:\n"${state.contextText}"\n\nInstrucciones:\n- Aplica una combinación de los siguientes estilos/tonos: ${toneNames}.\n- No agregues explicaciones adicionales, introducciones ni conclusiones fuera del correo. Solo devuelve el texto exacto del correo listo para copiar y enviar. Usa placeholders como [Tu Nombre] si es necesario.`;
+            } else {
+               prompt = `Redacta un correo electrónico nuevo completo basado en la siguiente solicitud o contexto.\n\nContexto:\n"${state.contextText}"\n\nInstrucciones:\n- Aplica una combinación de los siguientes estilos/tonos: ${toneNames}.\n- Incluye un Asunto (Subject) apropiado al principio.\n- No agregues explicaciones adicionales, introducciones ni conclusiones fuera del correo. Solo devuelve el texto exacto del correo listo para copiar y enviar. Usa placeholders como [Tu Nombre] si es necesario.`;
+            }
+
+            let sysInstructionText = "Eres un asistente experto en redacción de correos electrónicos corporativos y logísticos. Tu objetivo es crear correos perfectamente redactados listos para ser enviados, sin comentarios extra, sin saludos de la IA ni comillas alrededor del texto.";
+            
+            if (state.guideText) {
+                sysInstructionText += `\n\nADVERTENCIA: Debes adherirte ESTRICTAMENTE a la siguiente guía de redacción institucional proporcionada:\n\n<guia_institucional>\n${state.guideText}\n</guia_institucional>\n\nAplica las reglas y formatos de esta guía sobre cualquier otra instrucción general de estilo.`;
+            }
+
+            const payload = {
+              contents: [{ parts: [{ text: prompt }] }],
+              systemInstruction: { parts: [{ text: sysInstructionText }] }
+            };
+
+            try {
+               const data = await fetchWithRetry(url, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify(payload)
+               });
+               
+               const resultText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+               if(resultText) {
+                  state.generatedText = resultText.trim();
+               } else {
+                  throw new Error("No se pudo generar el texto.");
+               }
+            } catch (err) {
+               state.error = 'Error de conexión. No se pudo generar el comunicado. Por favor intente nuevamente.';
+               console.error(err);
+            } finally {
+               state.isGenerating = false;
+               updateUI();
+            }
+        }
+
+        function copyToClipboard() {
+            const textArea = document.createElement("textarea");
+            textArea.value = state.generatedText;
+            textArea.style.position = "fixed"; 
+            textArea.style.left = "-9999px";
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            
+            try {
+                document.execCommand('copy');
+                el.btnCopy.className = 'flex items-center justify-center gap-2 px-6 py-2.5 rounded-sm font-bold text-white uppercase tracking-wide text-sm transition-all shadow-md bg-green-600 border-b-4 border-green-800';
+                el.btnCopyContent.innerHTML = `${icons.check} Copiado al Portapapeles`;
+                
+                setTimeout(() => {
+                    el.btnCopy.className = 'flex items-center justify-center gap-2 px-6 py-2.5 rounded-sm font-bold text-white uppercase tracking-wide text-sm transition-all shadow-md bg-orange-500 hover:bg-orange-600 border-b-4 border-orange-700 active:border-b-0 active:mt-1';
+                    el.btnCopyContent.innerHTML = `${icons.copy} Copiar Comunicado`;
+                }, 2000);
+            } catch (err) {
+                console.error('Error al copiar al portapapeles', err);
+            } finally {
+                document.body.removeChild(textArea);
+            }
+        }
+
+        // EVENT LISTENERS
+        el.btnModeNew.onclick = () => { state.mode = 'new'; updateUI(); };
+        el.btnModeReply.onclick = () => { state.mode = 'reply'; updateUI(); };
+        
+        el.btnCancel.onclick = () => { state.mode = null; updateUI(); };
+        el.btnClear.onclick = () => { state.contextText = ''; el.inputContext.value = ''; updateUI(); };
+        
+        el.inputContext.oninput = (e) => { state.contextText = e.target.value; updateButtonsState(); };
+        
+        el.btnGenerate.onclick = generateEmail;
+        el.btnNewOp.onclick = resetApp;
+        el.btnAdjust.onclick = () => { state.generatedText = ''; updateUI(); };
+        el.btnCopy.onclick = copyToClipboard;
+
+        // INICIAR LA APP
+        updateUI();
+
+    </script>
+</body>
+</html>
